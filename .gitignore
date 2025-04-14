@@ -1,0 +1,23 @@
+# Cấu hình kết nối database (tùy chọn)
+# /includes/config.php
+
+# Tệp tạm
+*.log
+*.tmp
+
+# Thư mục tạm
+/tmp/
+/temp/
+
+# Tệp cấu hình môi trường
+.env
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Tệp hệ thống
+.DS_Store
+Thumbs.db
