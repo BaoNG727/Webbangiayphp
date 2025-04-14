@@ -136,8 +136,14 @@ $category_result = mysqli_query($conn, $category_query);
                                 <?php if ($product['sale_price']): ?>
                                     <div class="badge-sale">Sale</div>
                                 <?php endif; ?>
+                                <button class="btn-wishlist" data-product-id="<?php echo $product['id']; ?>" title="Add to wishlist">
+                                    <i class="far fa-heart"></i>
+                                </button>
                                 <a href="product.php?id=<?php echo $product['id']; ?>">
                                     <img src="uploads/<?php echo $product['image']; ?>" class="card-img-top" alt="<?php echo $product['name']; ?>">
+                                    <div class="product-quick-view">
+                                        <i class="fas fa-eye"></i> Quick View
+                                    </div>
                                 </a>
                                 <div class="card-body">
                                     <p class="product-category"><?php echo $product['category']; ?></p>

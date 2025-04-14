@@ -39,7 +39,22 @@ $related_result = mysqli_query($conn, $related_query);
     <div class="row mb-5">
         <!-- Product Image -->
         <div class="col-md-6 mb-4">
-            <img src="uploads/<?php echo $product['image']; ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="img-fluid product-detail-img">
+            <div class="main-product-image mb-3">
+                <img src="uploads/<?php echo $product['image']; ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="img-fluid product-detail-img" id="mainProductImage">
+            </div>
+            <!-- Image Gallery Thumbnails -->
+            <div class="row product-thumbnails">
+                <div class="col-3 mb-2">
+                    <img src="uploads/<?php echo $product['image']; ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="img-fluid thumbnail active" data-img="uploads/<?php echo $product['image']; ?>">
+                </div>
+                <!-- Simulate multiple product images -->
+                <div class="col-3 mb-2">
+                    <img src="assets/images/<?php echo strtolower(str_replace(' ', '-', $product['category'])); ?>-shoes.jpg" alt="<?php echo htmlspecialchars($product['name']); ?> View 2" class="img-fluid thumbnail" data-img="assets/images/<?php echo strtolower(str_replace(' ', '-', $product['category'])); ?>-shoes.jpg">
+                </div>
+                <div class="col-3 mb-2">
+                    <img src="assets/images/category-<?php echo strtolower($product['category']); ?>.jpg" alt="<?php echo htmlspecialchars($product['name']); ?> View 3" class="img-fluid thumbnail" data-img="assets/images/category-<?php echo strtolower($product['category']); ?>.jpg">
+                </div>
+            </div>
         </div>
         
         <!-- Product Info -->
@@ -80,6 +95,28 @@ $related_result = mysqli_query($conn, $related_query);
             <?php if ($product['stock'] > 0): ?>
                 <form class="mb-4">
                     <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="size" class="form-label">Size</label>
+                            <div class="d-flex align-items-center">
+                                <select id="size" class="form-select me-2">
+                                    <option value="">Select Size</option>
+                                    <option value="US 7">US 7</option>
+                                    <option value="US 7.5">US 7.5</option>
+                                    <option value="US 8">US 8</option>
+                                    <option value="US 8.5">US 8.5</option>
+                                    <option value="US 9">US 9</option>
+                                    <option value="US 9.5">US 9.5</option>
+                                    <option value="US 10">US 10</option>
+                                    <option value="US 10.5">US 10.5</option>
+                                    <option value="US 11">US 11</option>
+                                    <option value="US 11.5">US 11.5</option>
+                                    <option value="US 12">US 12</option>
+                                </select>
+                                <a href="#sizeGuide" data-bs-toggle="modal" class="text-dark text-decoration-none">
+                                    <i class="fas fa-ruler me-1"></i> Size Guide
+                                </a>
+                            </div>
+                        </div>
                         <div class="col-md-4">
                             <label for="quantity" class="form-label">Quantity</label>
                             <div class="quantity-selector">
@@ -142,6 +179,9 @@ $related_result = mysqli_query($conn, $related_query);
                             <?php endif; ?>
                             <a href="product.php?id=<?php echo $related['id']; ?>">
                                 <img src="uploads/<?php echo $related['image']; ?>" class="card-img-top" alt="<?php echo $related['name']; ?>">
+                                <div class="product-quick-view">
+                                    <i class="fas fa-eye"></i> Quick View
+                                </div>
                             </a>
                             <div class="card-body">
                                 <p class="product-category"><?php echo $related['category']; ?></p>
@@ -168,6 +208,198 @@ $related_result = mysqli_query($conn, $related_query);
             </div>
         </section>
     <?php endif; ?>
+</div>
+
+<!-- Size Guide Modal -->
+<div class="modal fade" id="sizeGuide" tabindex="-1" aria-labelledby="sizeGuideLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="sizeGuideLabel">Nike Shoe Size Guide</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-4">Use the chart below to determine your size. If you're on the borderline between two sizes, order the smaller size for a tighter fit or the larger size for a looser fit.</p>
+        
+        <h6 class="mb-3">Men's Sizes</h6>
+        <div class="table-responsive mb-4">
+          <table class="table table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>US</th>
+                <th>UK</th>
+                <th>EU</th>
+                <th>CM</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>7</td>
+                <td>6</td>
+                <td>40</td>
+                <td>25</td>
+              </tr>
+              <tr>
+                <td>7.5</td>
+                <td>6.5</td>
+                <td>40.5</td>
+                <td>25.5</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>7</td>
+                <td>41</td>
+                <td>26</td>
+              </tr>
+              <tr>
+                <td>8.5</td>
+                <td>7.5</td>
+                <td>42</td>
+                <td>26.5</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>8</td>
+                <td>42.5</td>
+                <td>27</td>
+              </tr>
+              <tr>
+                <td>9.5</td>
+                <td>8.5</td>
+                <td>43</td>
+                <td>27.5</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>9</td>
+                <td>44</td>
+                <td>28</td>
+              </tr>
+              <tr>
+                <td>10.5</td>
+                <td>9.5</td>
+                <td>44.5</td>
+                <td>28.5</td>
+              </tr>
+              <tr>
+                <td>11</td>
+                <td>10</td>
+                <td>45</td>
+                <td>29</td>
+              </tr>
+              <tr>
+                <td>11.5</td>
+                <td>10.5</td>
+                <td>45.5</td>
+                <td>29.5</td>
+              </tr>
+              <tr>
+                <td>12</td>
+                <td>11</td>
+                <td>46</td>
+                <td>30</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <h6 class="mb-3">Women's Sizes</h6>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>US</th>
+                <th>UK</th>
+                <th>EU</th>
+                <th>CM</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>5</td>
+                <td>3</td>
+                <td>35.5</td>
+                <td>22</td>
+              </tr>
+              <tr>
+                <td>5.5</td>
+                <td>3.5</td>
+                <td>36</td>
+                <td>22.5</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>4</td>
+                <td>36.5</td>
+                <td>23</td>
+              </tr>
+              <tr>
+                <td>6.5</td>
+                <td>4.5</td>
+                <td>37.5</td>
+                <td>23.5</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>5</td>
+                <td>38</td>
+                <td>24</td>
+              </tr>
+              <tr>
+                <td>7.5</td>
+                <td>5.5</td>
+                <td>38.5</td>
+                <td>24.5</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>6</td>
+                <td>39</td>
+                <td>25</td>
+              </tr>
+              <tr>
+                <td>8.5</td>
+                <td>6.5</td>
+                <td>40</td>
+                <td>25.5</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>7</td>
+                <td>40.5</td>
+                <td>26</td>
+              </tr>
+              <tr>
+                <td>9.5</td>
+                <td>7.5</td>
+                <td>41</td>
+                <td>26.5</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>8</td>
+                <td>42</td>
+                <td>27</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="mt-4">
+          <h6>How to Measure</h6>
+          <p>To find your shoe size, follow these instructions:</p>
+          <ol>
+            <li>Stand on a level floor with your back against a wall.</li>
+            <li>Place a ruler on the floor, align your heel with the wall, and measure the length from the wall to your longest toe.</li>
+            <li>Use the measurement to find your size in the chart above.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <?php include_once "includes/footer.php"; ?>
