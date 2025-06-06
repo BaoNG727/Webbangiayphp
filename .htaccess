@@ -1,0 +1,14 @@
+RewriteEngine On
+
+# Set DirectoryIndex to use index.php as default
+DirectoryIndex index.php
+
+# Redirect all requests to index.php except for existing files and directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/Webgiay/(assets|uploads|admin)/
+RewriteRule ^(.*)$ /Webgiay/index.php [QSA,L]
+
+# Optional: Force HTTPS (uncomment if needed)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

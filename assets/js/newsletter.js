@@ -99,3 +99,71 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// Enhanced newsletter form in footer
+document.addEventListener('DOMContentLoaded', function() {
+    const footerNewsletterForm = document.querySelector('footer #newsletter-form');
+    
+    if (footerNewsletterForm) {
+        footerNewsletterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const emailInput = this.querySelector('input[type="email"]');
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const email = emailInput.value.trim();
+            
+            // Basic email validation
+            if (!email || !isValidEmail(email)) {
+                showFooterMessage('Please enter a valid email address.', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const originalIcon = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            submitBtn.disabled = true;
+            
+            // Simulate newsletter subscription
+            setTimeout(() => {
+                showFooterMessage('Thank you for subscribing! Welcome to Nike Store.', 'success');
+                emailInput.value = '';
+                
+                // Reset button
+                submitBtn.innerHTML = originalIcon;
+                submitBtn.disabled = false;
+            }, 1500);
+        });
+    }
+    
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+    
+    function showFooterMessage(message, type) {
+        // Remove existing messages
+        const existingMessage = document.querySelector('.footer-newsletter-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+        
+        // Create new message
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `footer-newsletter-message alert alert-${type === 'success' ? 'success' : 'danger'} mt-2`;
+        messageDiv.style.fontSize = '0.85rem';
+        messageDiv.style.borderRadius = '20px';
+        messageDiv.style.padding = '8px 16px';
+        messageDiv.textContent = message;
+        
+        // Insert message after the form
+        const form = document.querySelector('footer #newsletter-form');
+        form.parentNode.insertBefore(messageDiv, form.nextSibling);
+        
+        // Remove message after 5 seconds
+        setTimeout(() => {
+            if (messageDiv && messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 5000);
+    }
+});
