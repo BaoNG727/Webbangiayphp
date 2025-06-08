@@ -88,9 +88,8 @@
                         <div class="detail-header d-flex align-items-center mb-2">
                             <i class="fas fa-map-marker-alt text-nike-red me-2"></i>
                             <span class="detail-title fw-semibold">Shipping Address</span>
-                        </div>
-                        <div class="detail-content text-muted small">
-                            <?= htmlspecialchars($order['shipping_address']) ?>
+                        </div>                        <div class="detail-content text-muted small">
+                            <?= htmlspecialchars(isset($order['shipping_address']) ? $order['shipping_address'] : ($order['name'] . "\n" . $order['address'] . "\n" . $order['city'] . "\n" . $order['phone'])) ?>
                         </div>
                     </div>
                 </div>
@@ -99,8 +98,7 @@
                         <div class="detail-header d-flex align-items-center mb-2">
                             <i class="fas fa-credit-card text-nike-red me-2"></i>
                             <span class="detail-title fw-semibold">Payment Method</span>
-                        </div>
-                        <div class="detail-content text-muted small">
+                        </div>                        <div class="detail-content text-muted small">
                             <?php
                             $paymentMethods = [
                                 'credit_card' => 'Credit Card',
@@ -108,7 +106,20 @@
                                 'bank_transfer' => 'Bank Transfer',
                                 'cash_on_delivery' => 'Cash on Delivery'
                             ];
-                            echo $paymentMethods[$order['payment_method']] ?? ucfirst(str_replace('_', ' ', $order['payment_method']));
+                            
+                            // Extract payment method from notes field or use fallback
+                            $paymentMethod = 'N/A';
+                            if (isset($order['payment_method'])) {
+                                $paymentMethod = $paymentMethods[$order['payment_method']] ?? ucfirst(str_replace('_', ' ', $order['payment_method']));
+                            } elseif (isset($order['notes']) && strpos($order['notes'], 'Payment method:') !== false) {
+                                // Extract from notes field
+                                $noteParts = explode('Payment method:', $order['notes']);
+                                if (count($noteParts) > 1) {
+                                    $extractedMethod = trim($noteParts[1]);
+                                    $paymentMethod = $paymentMethods[$extractedMethod] ?? ucfirst(str_replace('_', ' ', $extractedMethod));
+                                }
+                            }
+                            echo $paymentMethod;
                             ?>
                         </div>
                     </div>

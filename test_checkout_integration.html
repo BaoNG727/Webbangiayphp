@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Integration Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-4">
+        <h1>Discount Code Integration Test</h1>
+        
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Test Cart Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Nike Air Force 1 x2</span>
+                            <span>600,000 VND</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Nike Air Max 90 x1</span>
+                            <span>400,000 VND</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Subtotal:</strong>
+                            <strong id="subtotal">1,000,000 VND</strong>
+                        </div>
+                        
+                        <!-- Discount Code Section -->
+                        <div class="discount-code-section mb-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="discount-code" 
+                                       placeholder="Enter discount code" maxlength="50">
+                                <button class="btn btn-outline-secondary" type="button" id="apply-discount">
+                                    Apply
+                                </button>
+                            </div>
+                            <div id="discount-message" class="mt-2"></div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2" id="discount-row" style="display: none;">
+                            <span class="text-success">Discount:</span>
+                            <span class="text-success" id="discount-amount">-0 VND</span>
+                        </div>
+                        
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <strong>Total:</strong>
+                            <strong id="final-total">1,000,000 VND</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6>Test Discount Codes</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <strong>WELCOME10</strong> - 10% off (min 500,000 VND)
+                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="fillCode('WELCOME10')">Try</button>
+                        </div>
+                        <div class="mb-2">
+                            <strong>NIKE2024</strong> - 15% off (min 1,000,000 VND)
+                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="fillCode('NIKE2024')">Try</button>
+                        </div>
+                        <div class="mb-2">
+                            <strong>SAVE50K</strong> - 50,000 VND off (min 300,000 VND)
+                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="fillCode('SAVE50K')">Try</button>
+                        </div>
+                        <div class="mb-2">
+                            <strong>INVALID</strong> - Invalid code for testing
+                            <button class="btn btn-sm btn-outline-danger ms-2" onclick="fillCode('INVALID')">Try</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Test Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="test-results">
+                            <p class="text-muted">Apply discount codes to see results here...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const discountCodeInput = document.getElementById('discount-code');
+        const applyDiscountBtn = document.getElementById('apply-discount');
+        const discountMessage = document.getElementById('discount-message');
+        const discountRow = document.getElementById('discount-row');
+        const discountAmount = document.getElementById('discount-amount');
+        const finalTotal = document.getElementById('final-total');
+        const testResults = document.getElementById('test-results');
+        
+        let currentDiscountAmount = 0;
+        const originalTotal = 1000000; // 1,000,000 VND
+        
+        function fillCode(code) {
+            discountCodeInput.value = code;
+        }
+        
+        applyDiscountBtn.addEventListener('click', function() {
+            const discountCode = discountCodeInput.value.trim().toUpperCase();
+            
+            if (!discountCode) {
+                showDiscountMessage('Please enter a discount code', 'danger');
+                return;
+            }
+            
+            applyDiscountBtn.disabled = true;
+            applyDiscountBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            // Log test attempt
+            addTestResult(`Testing discount code: ${discountCode}`, 'info');
+            
+            // Make AJAX request to validate discount code
+            fetch('/api/validate-discount', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    code: discountCode,
+                    total: originalTotal,
+                    user_id: 1
+                })
+            })
+            .then(response => {
+                addTestResult(`HTTP Status: ${response.status}`, response.ok ? 'success' : 'danger');
+                return response.json();
+            })
+            .then(data => {
+                addTestResult(`API Response: ${JSON.stringify(data, null, 2)}`, 'info');
+                
+                if (data.success) {
+                    currentDiscountAmount = data.discount_amount;
+                    const newTotal = originalTotal - currentDiscountAmount;
+                    
+                    // Update UI
+                    discountAmount.textContent = '-' + formatCurrency(currentDiscountAmount);
+                    finalTotal.textContent = formatCurrency(newTotal);
+                    discountRow.style.display = 'flex';
+                    
+                    // Show success message
+                    showDiscountMessage(data.message || 'Discount applied successfully!', 'success');
+                    addTestResult(`✓ Discount applied: ${formatCurrency(currentDiscountAmount)}`, 'success');
+                    
+                    // Change button to remove
+                    discountCodeInput.disabled = true;
+                    applyDiscountBtn.textContent = 'Remove';
+                    applyDiscountBtn.classList.remove('btn-outline-secondary');
+                    applyDiscountBtn.classList.add('btn-outline-danger');
+                    applyDiscountBtn.onclick = removeDiscount;
+                } else {
+                    showDiscountMessage(data.message || 'Invalid discount code', 'danger');
+                    addTestResult(`✗ ${data.message}`, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showDiscountMessage('Error applying discount code', 'danger');
+                addTestResult(`✗ Network error: ${error.message}`, 'danger');
+            })
+            .finally(() => {
+                applyDiscountBtn.disabled = false;
+                if (applyDiscountBtn.textContent.includes('spinner')) {
+                    applyDiscountBtn.innerHTML = 'Apply';
+                }
+            });
+        });
+        
+        function removeDiscount() {
+            currentDiscountAmount = 0;
+            
+            // Reset UI
+            discountRow.style.display = 'none';
+            finalTotal.textContent = formatCurrency(originalTotal);
+            
+            // Reset input and button
+            discountCodeInput.disabled = false;
+            discountCodeInput.value = '';
+            applyDiscountBtn.textContent = 'Apply';
+            applyDiscountBtn.classList.remove('btn-outline-danger');
+            applyDiscountBtn.classList.add('btn-outline-secondary');
+            applyDiscountBtn.onclick = null;
+            
+            // Clear message
+            discountMessage.innerHTML = '';
+            addTestResult('Discount removed', 'info');
+        }
+        
+        function showDiscountMessage(message, type) {
+            discountMessage.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`;
+        }
+        
+        function addTestResult(message, type) {
+            const timestamp = new Date().toLocaleTimeString();
+            const alertClass = type === 'info' ? 'secondary' : type;
+            
+            const resultHtml = `
+                <div class="alert alert-${alertClass} alert-sm">
+                    <small class="text-muted">[${timestamp}]</small><br>
+                    <pre style="margin: 0; white-space: pre-wrap;">${message}</pre>
+                </div>
+            `;
+            
+            testResults.innerHTML = resultHtml + testResults.innerHTML;
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount);
+        }
+        
+        // Allow Enter key to apply discount
+        discountCodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyDiscountBtn.click();
+            }
+        });
+        
+        // Initial test result
+        addTestResult('Discount code integration test ready. Total: ' + formatCurrency(originalTotal), 'success');
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

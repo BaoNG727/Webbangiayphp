@@ -38,17 +38,15 @@
                                                 <?php echo ucfirst($order['status']); ?>
                                             </span>
                                         </td>
-                                    </tr>
-                                    <tr>
+                                    </tr>                                    <tr>
                                         <td><strong>Payment Method:</strong></td>
-                                        <td><?php echo ucwords(str_replace('_', ' ', $order['payment_method'])); ?></td>
+                                        <td><?php echo isset($order['payment_method']) ? ucwords(str_replace('_', ' ', $order['payment_method'])) : 'See notes'; ?></td>
                                     </tr>
                                 </table>
                             </div>
-                            <div class="col-md-6">
-                                <h6>Shipping Address</h6>
+                            <div class="col-md-6">                                <h6>Shipping Address</h6>
                                 <address class="small">
-                                    <?php echo nl2br(htmlspecialchars($order['shipping_address'])); ?>
+                                    <?php echo nl2br(htmlspecialchars(isset($order['shipping_address']) ? $order['shipping_address'] : ($order['name'] . "\n" . $order['address'] . "\n" . $order['city'] . "\n" . $order['phone']))); ?>
                                 </address>
                             </div>
                         </div>
@@ -93,9 +91,22 @@
                                                 <td>$<?php echo number_format($item['price'] * $item['quantity'], 2); ?></td>
                                             </tr>
                                         <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </tbody>
+                                    <?php endif; ?>                                </tbody>
                                 <tfoot>
+                                    <?php if (!empty($order['subtotal_amount'])): ?>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Subtotal:</th>
+                                            <th>$<?php echo number_format($order['subtotal_amount'], 2); ?></th>
+                                        </tr>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!empty($order['discount_code']) && $order['discount_amount'] > 0): ?>
+                                        <tr class="table-success">
+                                            <th colspan="3" class="text-end text-success">Discount (<?php echo htmlspecialchars($order['discount_code']); ?>):</th>
+                                            <th class="text-success">-$<?php echo number_format($order['discount_amount'], 2); ?></th>
+                                        </tr>
+                                    <?php endif; ?>
+                                    
                                     <tr>
                                         <th colspan="3" class="text-end">Total Amount:</th>
                                         <th>$<?php echo number_format($order['total_amount'], 2); ?></th>

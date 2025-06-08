@@ -38,9 +38,7 @@ class CheckoutController extends Controller
             return;
         }
 
-        $this->requireLogin();
-
-        $cartModel = $this->model('Cart');
+        $this->requireLogin();        $cartModel = $this->model('Cart');
         $orderModel = $this->model('Order');
         $userId = $this->session('user_id');
 
@@ -62,9 +60,9 @@ class CheckoutController extends Controller
             'state' => trim($this->input('state')),
             'zip' => trim($this->input('zip')),
             'country' => trim($this->input('country'))
-        ];
-
-        $paymentMethod = $this->input('payment_method');
+        ];        $paymentMethod = $this->input('payment_method');
+        $discountCode = trim($this->input('discount_code'));
+        $discountAmount = floatval($this->input('discount_amount'));
 
         // Validation
         $errors = [];
@@ -77,39 +75,62 @@ class CheckoutController extends Controller
 
         if (empty($paymentMethod)) {
             $errors[] = 'Payment method is required';
+        }        if (!filter_var($shipping['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Valid email is required';
         }
 
-        if (!filter_var($shipping['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'Valid email is required';
-        }        if (!empty($errors)) {
+        if (!empty($errors)) {
             $this->session('checkout_errors', $errors);
             $this->session('checkout_data', array_merge($shipping, ['payment_method' => $paymentMethod]));
             $this->redirect('/Webgiay/checkout');
             return;
-        }
+        }        try {
+            // Validate discount code if provided
+            $validatedDiscount = null;
+            if (!empty($discountCode)) {
+                $discountModel = $this->model('DiscountCode');
+                $validatedDiscount = $discountModel->validateCode($discountCode, $userId, $cartTotal);
+                
+                if (!$validatedDiscount['valid']) {
+                    $errors[] = 'Invalid discount code: ' . $validatedDiscount['message'];
+                } else {
+                    $discountAmount = $validatedDiscount['discount_amount'];
+                }
+            }
+            
+            if (!empty($errors)) {
+                $this->session('checkout_errors', $errors);
+                $this->session('checkout_data', array_merge($shipping, ['payment_method' => $paymentMethod]));
+                $this->redirect('/Webgiay/checkout');
+                return;
+            }
 
-        try {
             // Calculate totals
             $subtotal = $cartTotal;
             $shippingCost = $cartTotal >= 50 ? 0 : 5.99;
-            $finalTotal = $subtotal + $shippingCost;
-
-            // Create shipping address string
+            $totalAfterDiscount = $subtotal - $discountAmount;
+            $finalTotal = $totalAfterDiscount + $shippingCost;// Create shipping address string
             $shippingAddress = implode(', ', [
                 $shipping['first_name'] . ' ' . $shipping['last_name'],
                 $shipping['address'],
                 $shipping['city'] . ', ' . $shipping['state'] . ' ' . $shipping['zip'],
                 $shipping['country']
-            ]);
-
-            // Create order
+            ]);            // Create order
             $orderData = [
                 'user_id' => $userId,
                 'total_amount' => $finalTotal,
+                'subtotal_amount' => $subtotal,
+                'discount_code' => $discountCode,
+                'discount_amount' => $discountAmount,
                 'status' => 'pending',
-                'shipping_address' => $shippingAddress,
-                'payment_method' => $paymentMethod
-            ];            $orderId = $orderModel->createOrder($orderData);
+                'name' => $shipping['first_name'] . ' ' . $shipping['last_name'],
+                'address' => $shipping['address'],
+                'city' => $shipping['city'] . ', ' . $shipping['state'] . ' ' . $shipping['zip'] . ', ' . $shipping['country'],
+                'phone' => $shipping['phone'],
+                'notes' => 'Payment method: ' . $paymentMethod
+            ];
+
+            $orderId = $orderModel->createOrder($orderData);
 
             if ($orderId) {
                 // Add order items
@@ -120,25 +141,36 @@ class CheckoutController extends Controller
                         'product_id' => $item['product_id'],
                         'quantity' => $item['quantity'],
                         'price' => $price
-                    ];
-                    $orderModel->addOrderItem($orderItemData);
+                    ];                    $orderModel->addOrderItem($orderItemData);
                 }
 
-                // Clear cart
-                $cartModel->clearCart($userId);                // Send order confirmation email
+                // Record discount code usage if discount was applied
+                if (!empty($discountCode) && $discountAmount > 0 && $validatedDiscount) {
+                    $discountModel->recordUsage(
+                        $validatedDiscount['discount_code']['id'],
+                        $userId,
+                        $orderId,
+                        $discountAmount
+                    );
+                }// Clear cart
+                $cartModel->clearCart($userId);
+
+                // Send order confirmation email
                 try {
                     $emailService = new Email();
                     $order = $orderModel->getOrderWithItems($orderId);
-                    $emailService->sendOrderConfirmation($order, $shipping['email']);
-                } catch (Exception $emailError) {
+                    $emailService->sendOrderConfirmation($order, $shipping['email']);                } catch (Exception $emailError) {
                     // Log email error but don't fail the order
                     error_log("Failed to send order confirmation email: " . $emailError->getMessage());
-                }                // Set success message and redirect
+                }
+
+                // Set success message and redirect
                 $this->session('order_success', $orderId);
-                $this->redirect('/Webgiay/checkout/success');
-            } else {
+                $this->redirect('/Webgiay/checkout/success');            } else {
                 throw new Exception('Failed to create order');
-            }        } catch (Exception $e) {
+            }
+
+        } catch (Exception $e) {
             $this->session('error', 'Order processing failed. Please try again.');
             $this->redirect('/Webgiay/checkout');
         }

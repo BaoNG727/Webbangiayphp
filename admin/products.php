@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 // Handle product deletion
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $id = $_GET['delete'];
-    $delete_query = "DELETE FROM shoes WHERE id = ?";
+    $delete_query = "DELETE FROM products WHERE id = ?";
     $stmt = $pdo->prepare($delete_query);
     if ($stmt->execute([$id])) {
         $success_message = "Product deleted successfully!";
@@ -36,16 +36,16 @@ if ($search) {
 }
 
 // Get total count
-$count_query = "SELECT COUNT(*) as total FROM shoes" . $search_sql;
+$count_query = "SELECT COUNT(*) as total FROM products" . $search_sql;
 $stmt = $pdo->prepare($count_query);
 $stmt->execute($params);
 $total_products = $stmt->fetch()['total'];
 $total_pages = ceil($total_products / $per_page);
 
 // Get products
-$products_query = "SELECT s.*, c.name as category_name FROM shoes s 
-                   LEFT JOIN categories c ON s.category_id = c.id" . 
-                   $search_sql . " ORDER BY s.created_at DESC LIMIT ? OFFSET ?";
+$products_query = "SELECT p.*, c.name as category_name FROM products p 
+                   LEFT JOIN categories c ON p.category_id = c.id" . 
+                   $search_sql . " ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
 $params[] = $per_page;
 $params[] = $offset;
 $stmt = $pdo->prepare($products_query);
@@ -89,19 +89,21 @@ $products = $stmt->fetchAll();
                             <a class="nav-link text-white" href="orders.php">
                                 <i class="fas fa-shopping-cart me-2"></i> Orders
                             </a>
-                        </li>
-                        <li class="nav-item">
+                        </li>                        <li class="nav-item">
                             <a class="nav-link text-white" href="users.php">
                                 <i class="fas fa-users me-2"></i> Users
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" href="../index.php" target="_blank">
+                            <a class="nav-link text-white" href="discount-codes.php">
+                                <i class="fas fa-tags me-2"></i> Discount Codes
+                            </a>
+                        </li><li class="nav-item">
+                            <a class="nav-link text-white" href="../" target="_blank">
                                 <i class="fas fa-external-link-alt me-2"></i> View Website
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" href="../logout.php">
+                        </li>                        <li class="nav-item">
+                            <a class="nav-link text-white" href="../logout">
                                 <i class="fas fa-sign-out-alt me-2"></i> Logout
                             </a>
                         </li>
@@ -153,15 +155,15 @@ $products = $stmt->fetchAll();
                 <div class="card">
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                            <table class="table table-hover">                                <thead>
                                     <tr>
                                         <th>Image</th>
                                         <th>Name</th>
+                                        <th>Brand</th>
                                         <th>Category</th>
                                         <th>Price</th>
                                         <th>Size</th>
-                                        <th>Featured</th>
+                                        <th>Stock</th>
                                         <th>Created</th>
                                         <th>Actions</th>
                                     </tr>
@@ -180,20 +182,18 @@ $products = $stmt->fetchAll();
                                                             <i class="fas fa-shoe-prints text-muted"></i>
                                                         </div>
                                                     <?php endif; ?>
-                                                </td>
-                                                <td>
+                                                </td>                                                <td>
                                                     <strong><?php echo htmlspecialchars($product['name']); ?></strong>
                                                     <br><small class="text-muted"><?php echo substr(htmlspecialchars($product['description']), 0, 50); ?>...</small>
                                                 </td>
+                                                <td><?php echo htmlspecialchars($product['brand'] ?? 'N/A'); ?></td>
                                                 <td><?php echo htmlspecialchars($product['category_name'] ?? 'Uncategorized'); ?></td>
                                                 <td>$<?php echo number_format($product['price'], 2); ?></td>
                                                 <td><?php echo htmlspecialchars($product['size']); ?></td>
                                                 <td>
-                                                    <?php if ($product['featured']): ?>
-                                                        <span class="badge bg-success">Yes</span>
-                                                    <?php else: ?>
-                                                        <span class="badge bg-secondary">No</span>
-                                                    <?php endif; ?>
+                                                    <span class="badge bg-<?php echo $product['stock_quantity'] > 0 ? 'success' : 'danger'; ?>">
+                                                        <?php echo $product['stock_quantity']; ?>
+                                                    </span>
                                                 </td>
                                                 <td><?php echo date('M d, Y', strtotime($product['created_at'])); ?></td>
                                                 <td>
@@ -211,9 +211,8 @@ $products = $stmt->fetchAll();
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td colspan="8" class="text-center">
+                                    <?php else: ?>                                        <tr>
+                                            <td colspan="9" class="text-center">
                                                 <div class="py-4">
                                                     <i class="fas fa-shoe-prints fa-3x text-muted mb-3"></i>
                                                     <h5>No products found</h5>

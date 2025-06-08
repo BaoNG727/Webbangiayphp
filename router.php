@@ -57,6 +57,22 @@ if ($path !== '/' && substr($path, -1) === '/') {
     $path = rtrim($path, '/');
 }
 
+// Handle API routes
+if (strpos($path, '/api/') === 0) {
+    $apiPath = substr($path, 5); // Remove '/api/' prefix
+    $apiFile = __DIR__ . '/api/' . $apiPath . '.php';
+    
+    if (file_exists($apiFile)) {
+        require_once $apiFile;
+        exit;
+    } else {
+        http_response_code(404);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
+        exit;
+    }
+}
+
 // Simple routing logic
 try {
     $method = $_SERVER['REQUEST_METHOD'];

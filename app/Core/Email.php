@@ -151,10 +151,9 @@ class Email
                     <tr>
                         <td style='padding: 8px 0; font-weight: bold;'>Status:</td>
                         <td style='padding: 8px 0;'>" . ucfirst($order['status']) . "</td>
-                    </tr>
-                    <tr>
+                    </tr>                    <tr>
                         <td style='padding: 8px 0; font-weight: bold;'>Payment Method:</td>
-                        <td style='padding: 8px 0;'>" . ucwords(str_replace('_', ' ', $order['payment_method'])) . "</td>
+                        <td style='padding: 8px 0;'>" . (isset($order['payment_method']) ? ucwords(str_replace('_', ' ', $order['payment_method'])) : 'See notes') . "</td>
                     </tr>
                 </table>
             </div>
@@ -169,20 +168,28 @@ class Email
                             <th style='padding: 10px; text-align: right; border-bottom: 1px solid #ddd;'>Price</th>
                             <th style='padding: 10px; text-align: right; border-bottom: 1px solid #ddd;'>Total</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        $itemsHtml
+                    </thead>                    <tbody>
+                        $itemsHtml";
+        
+        // Add discount row if applicable
+        if (!empty($order['discount_code']) && $order['discount_amount'] > 0) {
+            $emailBody .= "
+                        <tr style='background: #e8f5e8;'>
+                            <td colspan='3' style='padding: 10px; text-align: right; color: #155724;'>Discount (" . htmlspecialchars($order['discount_code']) . "):</td>
+                            <td style='padding: 10px; text-align: right; color: #155724;'>-$" . number_format($order['discount_amount'], 2) . "</td>
+                        </tr>";
+        }
+        
+        $emailBody .= "
                         <tr style='background: #f8f9fa; font-weight: bold;'>
                             <td colspan='3' style='padding: 10px; text-align: right; border-top: 2px solid #000;'>Total Amount:</td>
                             <td style='padding: 10px; text-align: right; border-top: 2px solid #000;'>$" . number_format($order['total_amount'], 2) . "</td>
                         </tr>
                     </tbody>
                 </table>
-            </div>
-
-            <div style='margin-bottom: 20px;'>
+            </div><div style='margin-bottom: 20px;'>
                 <h3 style='border-bottom: 2px solid #000; padding-bottom: 10px;'>Shipping Address</h3>
-                <p style='background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 0;'>" . nl2br(htmlspecialchars($order['shipping_address'])) . "</p>
+                <p style='background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 0;'>" . nl2br(htmlspecialchars(isset($order['shipping_address']) ? $order['shipping_address'] : ($order['name'] . "\n" . $order['address'] . "\n" . $order['city'] . "\n" . $order['phone']))) . "</p>
             </div>
 
             <div style='background: #e7f3ff; padding: 20px; border-radius: 8px; margin-bottom: 20px;'>

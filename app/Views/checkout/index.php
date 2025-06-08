@@ -180,17 +180,27 @@
                                             </div>
                                         </div>
                                     <?php endforeach; ?>
+                                </div>                                <!-- Discount Code -->
+                                <div class="discount-code-section mb-3">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="discount-code" 
+                                               placeholder="Enter discount code" maxlength="50">
+                                        <button class="btn btn-outline-secondary" type="button" id="apply-discount">
+                                            Apply
+                                        </button>
+                                    </div>
+                                    <div id="discount-message" class="mt-2"></div>
                                 </div>
 
                                 <!-- Order Totals -->
                                 <div class="order-totals">
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>Subtotal:</span>
-                                        <span>$<?php echo number_format($cart_total, 2); ?></span>
+                                        <span id="subtotal-amount">$<?php echo number_format($cart_total, 2); ?></span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>Shipping:</span>
-                                        <span>
+                                        <span id="shipping-amount">
                                             <?php if ($shipping_cost > 0): ?>
                                                 $<?php echo number_format($shipping_cost, 2); ?>
                                             <?php else: ?>
@@ -198,12 +208,19 @@
                                             <?php endif; ?>
                                         </span>
                                     </div>
-                                    <hr>
-                                    <div class="d-flex justify-content-between mb-3">
+                                    <div class="d-flex justify-content-between mb-2" id="discount-row" style="display: none;">
+                                        <span class="text-success">Discount:</span>
+                                        <span class="text-success" id="discount-amount">-$0.00</span>
+                                    </div>
+                                    <hr>                                    <div class="d-flex justify-content-between mb-3">
                                         <strong>Total:</strong>
-                                        <strong class="text-primary">$<?php echo number_format($final_total, 2); ?></strong>
+                                        <strong class="text-primary" id="final-total">$<?php echo number_format($final_total, 2); ?></strong>
                                     </div>
                                 </div>
+
+                                <!-- Hidden fields for discount -->
+                                <input type="hidden" id="applied-discount-code" name="discount_code" value="">
+                                <input type="hidden" id="applied-discount-amount" name="discount_amount" value="0">
 
                                 <button type="submit" class="btn btn-dark btn-lg w-100" id="place-order-btn">
                                     <i class="fas fa-lock"></i> Place Order
@@ -267,6 +284,120 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('checkout-form');
     const submitBtn = document.getElementById('place-order-btn');
+    
+    // Discount code functionality
+    const discountCodeInput = document.getElementById('discount-code');
+    const applyDiscountBtn = document.getElementById('apply-discount');
+    const discountMessage = document.getElementById('discount-message');
+    const discountRow = document.getElementById('discount-row');
+    const discountAmount = document.getElementById('discount-amount');
+    const finalTotal = document.getElementById('final-total');
+    const appliedDiscountCode = document.getElementById('applied-discount-code');
+    const appliedDiscountAmount = document.getElementById('applied-discount-amount');
+    
+    let currentDiscountAmount = 0;
+    const originalTotal = <?php echo $final_total; ?>;
+    
+    applyDiscountBtn.addEventListener('click', function() {
+        const discountCode = discountCodeInput.value.trim().toUpperCase();
+        
+        if (!discountCode) {
+            showDiscountMessage('Please enter a discount code', 'danger');
+            return;
+        }
+        
+        applyDiscountBtn.disabled = true;
+        applyDiscountBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        // Make AJAX request to validate discount code
+        fetch('/Webgiay/api/validate-discount', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                discount_code: discountCode,
+                order_amount: originalTotal
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentDiscountAmount = data.discount_amount;
+                const newTotal = originalTotal - currentDiscountAmount;
+                
+                // Update UI
+                discountAmount.textContent = '-$' + currentDiscountAmount.toFixed(2);
+                finalTotal.textContent = '$' + newTotal.toFixed(2);
+                discountRow.style.display = 'flex';
+                
+                // Update hidden fields
+                appliedDiscountCode.value = discountCode;
+                appliedDiscountAmount.value = currentDiscountAmount;
+                
+                // Show success message
+                showDiscountMessage(data.message || 'Discount applied successfully!', 'success');
+                
+                // Disable input and change button to remove
+                discountCodeInput.disabled = true;
+                applyDiscountBtn.textContent = 'Remove';
+                applyDiscountBtn.classList.remove('btn-outline-secondary');
+                applyDiscountBtn.classList.add('btn-outline-danger');
+                applyDiscountBtn.onclick = removeDiscount;
+            } else {
+                showDiscountMessage(data.message || 'Invalid discount code', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showDiscountMessage('Error applying discount code', 'danger');
+        })
+        .finally(() => {
+            applyDiscountBtn.disabled = false;
+            if (applyDiscountBtn.textContent.includes('spinner')) {
+                applyDiscountBtn.innerHTML = 'Apply';
+            }
+        });
+    });
+    
+    function removeDiscount() {
+        currentDiscountAmount = 0;
+        
+        // Reset UI
+        discountRow.style.display = 'none';
+        finalTotal.textContent = '$' + originalTotal.toFixed(2);
+        
+        // Reset hidden fields
+        appliedDiscountCode.value = '';
+        appliedDiscountAmount.value = '0';
+        
+        // Reset input and button
+        discountCodeInput.disabled = false;
+        discountCodeInput.value = '';
+        applyDiscountBtn.textContent = 'Apply';
+        applyDiscountBtn.classList.remove('btn-outline-danger');
+        applyDiscountBtn.classList.add('btn-outline-secondary');
+        applyDiscountBtn.onclick = null;
+        
+        // Clear message
+        discountMessage.innerHTML = '';
+    }
+    
+    function showDiscountMessage(message, type) {
+        discountMessage.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>`;
+    }
+    
+    // Allow Enter key to apply discount
+    discountCodeInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            applyDiscountBtn.click();
+        }
+    });
     
     form.addEventListener('submit', function(e) {
         submitBtn.disabled = true;

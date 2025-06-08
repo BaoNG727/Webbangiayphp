@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 
 // Get counts for dashboard
-$products_query = "SELECT COUNT(*) as count FROM shoes";
+$products_query = "SELECT COUNT(*) as count FROM products";
 $products_result = mysqli_query($conn, $products_query);
 $products_count = mysqli_fetch_assoc($products_result)['count'];
 
@@ -67,19 +67,21 @@ $low_stock_result = null;
                             <a class="nav-link text-white" href="orders.php">
                                 <i class="fas fa-shopping-cart me-2"></i> Orders
                             </a>
-                        </li>
-                        <li class="nav-item">
+                        </li>                        <li class="nav-item">
                             <a class="nav-link text-white" href="users.php">
                                 <i class="fas fa-users me-2"></i> Users
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" href="../index.php" target="_blank">
+                            <a class="nav-link text-white" href="discount-codes.php">
+                                <i class="fas fa-tags me-2"></i> Discount Codes
+                            </a>
+                        </li><li class="nav-item">
+                            <a class="nav-link text-white" href="../" target="_blank">
                                 <i class="fas fa-external-link-alt me-2"></i> View Website
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" href="../logout.php">
+                        </li>                        <li class="nav-item">
+                            <a class="nav-link text-white" href="../logout">
                                 <i class="fas fa-sign-out-alt me-2"></i> Logout
                             </a>
                         </li>

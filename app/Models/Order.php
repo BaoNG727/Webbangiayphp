@@ -38,14 +38,15 @@ class Order extends Model
                 JOIN products p ON oi.product_id = p.id 
                 WHERE oi.order_id = ?";
         return $this->db->fetchAll($sql, [$orderId]);
-    }
-
-    public function addOrderItem($orderItemData)
+    }    public function addOrderItem($orderItemData)
     {
-        $sql = "INSERT INTO order_items (order_id, product_id, quantity, price) 
-                VALUES (:order_id, :product_id, :quantity, :price)";
+        // Calculate subtotal
+        $orderItemData['subtotal'] = $orderItemData['quantity'] * $orderItemData['price'];
+        
+        $sql = "INSERT INTO order_items (order_id, product_id, quantity, price, subtotal) 
+                VALUES (:order_id, :product_id, :quantity, :price, :subtotal)";
         return $this->db->query($sql, $orderItemData);
-    }    public function getRecentOrders($limit = 5)
+    }public function getRecentOrders($limit = 5)
     {
         $sql = "SELECT o.*, u.username, u.email 
                 FROM {$this->table} o 

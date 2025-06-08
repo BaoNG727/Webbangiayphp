@@ -276,9 +276,20 @@
                                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                 </svg>
-                            </div>
-                            <div class="payment-details">
-                                <span class="payment-type"><?= ucfirst($order['payment_method'] ?? 'Credit Card') ?></span>
+                            </div>                            <div class="payment-details">
+                                <?php
+                                // Extract payment method from notes field or use fallback
+                                $paymentMethod = 'Credit Card';
+                                if (isset($order['payment_method'])) {
+                                    $paymentMethod = ucfirst(str_replace('_', ' ', $order['payment_method']));
+                                } elseif (isset($order['notes']) && strpos($order['notes'], 'Payment method:') !== false) {
+                                    $noteParts = explode('Payment method:', $order['notes']);
+                                    if (count($noteParts) > 1) {
+                                        $paymentMethod = ucfirst(str_replace('_', ' ', trim($noteParts[1])));
+                                    }
+                                }
+                                ?>
+                                <span class="payment-type"><?= $paymentMethod ?></span>
                                 <span class="payment-last4">•••• •••• •••• <?= substr($order['card_last4'] ?? '1234', -4) ?></span>
                             </div>
                         </div>
