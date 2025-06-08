@@ -6,7 +6,7 @@
 
 // Database Configuration
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'nike_store'); // Database name corrected to match existing database
+define('DB_NAME', 'nike_store');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 

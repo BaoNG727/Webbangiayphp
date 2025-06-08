@@ -6,10 +6,9 @@
  */
 
 class Config
-{
-    // Database Configuration
+{    // Database Configuration
     const DB_HOST = 'localhost';
-    const DB_NAME = 'nike_shoe_store';
+    const DB_NAME = 'nike_store';
     const DB_USER = 'root';
     const DB_PASS = '';
     const DB_CHARSET = 'utf8mb4';
