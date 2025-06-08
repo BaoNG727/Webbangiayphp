@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 
 // Get counts for dashboard
-$products_query = "SELECT COUNT(*) as count FROM products";
+$products_query = "SELECT COUNT(*) as count FROM shoes";
 $products_result = mysqli_query($conn, $products_query);
 $products_count = mysqli_fetch_assoc($products_result)['count'];
 
@@ -21,13 +21,14 @@ $users_query = "SELECT COUNT(*) as count FROM users WHERE role = 'customer'";
 $users_result = mysqli_query($conn, $users_query);
 $users_count = mysqli_fetch_assoc($users_result)['count'];
 
-$recent_orders_query = "SELECT o.*, u.username, u.email FROM orders o 
+$recent_orders_query = "SELECT o.*, u.name, u.email FROM orders o 
                          JOIN users u ON o.user_id = u.id 
                          ORDER BY o.created_at DESC LIMIT 5";
 $recent_orders_result = mysqli_query($conn, $recent_orders_query);
 
-$low_stock_query = "SELECT * FROM products WHERE stock <= 5 AND stock > 0 ORDER BY stock ASC LIMIT 5";
-$low_stock_result = mysqli_query($conn, $low_stock_query);
+// For low stock, we'll need to add a stock field or use a different approach for shoes
+// Since shoes table doesn't have stock field, let's skip this for now
+$low_stock_result = null;
 ?>
 
 <!DOCTYPE html>
@@ -92,7 +93,7 @@ $low_stock_result = mysqli_query($conn, $low_stock_query);
                     <h1 class="h2">Dashboard</h1>
                     <div>
                         <span class="me-2"><?php echo date('F d, Y'); ?></span>
-                        <span class="badge bg-primary"><?php echo $_SESSION['username']; ?></span>
+                        <span class="badge bg-primary"><?php echo $_SESSION['name'] ?? 'Admin'; ?></span>
                     </div>
                 </div>
                 
@@ -167,7 +168,7 @@ $low_stock_result = mysqli_query($conn, $low_stock_query);
                                                 <?php while ($order = mysqli_fetch_assoc($recent_orders_result)): ?>
                                                     <tr>
                                                         <td>#<?php echo $order['id']; ?></td>
-                                                        <td><?php echo $order['username']; ?></td>
+                                                        <td><?php echo $order['name']; ?></td>
                                                         <td>$<?php echo number_format($order['total_amount'], 2); ?></td>
                                                         <td>
                                                             <?php 
@@ -216,32 +217,18 @@ $low_stock_result = mysqli_query($conn, $low_stock_query);
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Low Stock Alert -->
+                      <!-- Low Stock Alert -->
                     <div class="col-lg-4 mb-4">
                         <div class="card">
                             <div class="card-header">
-                                <h5 class="mb-0">Low Stock Products</h5>
+                                <h5 class="mb-0">Product Management</h5>
                             </div>
                             <div class="card-body">
-                                <ul class="list-group">
-                                    <?php if (mysqli_num_rows($low_stock_result) > 0): ?>
-                                        <?php while ($product = mysqli_fetch_assoc($low_stock_result)): ?>
-                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 class="mb-0"><?php echo $product['name']; ?></h6>
-                                                    <small class="text-muted"><?php echo $product['category']; ?></small>
-                                                </div>
-                                                <span class="badge bg-danger rounded-pill"><?php echo $product['stock']; ?> left</span>
-                                            </li>
-                                        <?php endwhile; ?>
-                                    <?php else: ?>
-                                        <li class="list-group-item">No low stock products</li>
-                                    <?php endif; ?>
-                                </ul>
-                            </div>
-                            <div class="card-footer">
-                                <a href="products.php" class="btn btn-sm btn-primary">Manage Inventory</a>
+                                <div class="text-center">
+                                    <i class="fas fa-shoe-prints fa-3x mb-3 text-muted"></i>
+                                    <p class="text-muted">Manage your shoe inventory</p>
+                                    <a href="products.php" class="btn btn-primary">View All Products</a>
+                                </div>
                             </div>
                         </div>
                     </div>

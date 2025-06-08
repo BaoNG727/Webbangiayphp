@@ -11,19 +11,19 @@ class PageController extends Controller
         $data = [
             'title' => 'About Us - Nike Shoe Store',
             'description' => 'Learn more about Nike Shoe Store, our mission, and commitment to providing the best athletic footwear.'
-        ];
-
-        $this->view('layouts/header', $data);
+        ];        $this->view('layouts/header', $data);
         $this->view('pages/about', $data);
         $this->view('layouts/footer');
     }
-
+    
     public function contact()
     {
         $data = [
             'title' => 'Contact Us - Nike Shoe Store',
             'description' => 'Get in touch with Nike Shoe Store customer service for support, questions, or feedback.'
-        ];        // Handle contact form submission
+        ];
+        
+        // Handle contact form submission
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $name = Security::sanitizeInput($_POST['name'] ?? '');
             $email = Security::sanitizeInput($_POST['email'] ?? '');

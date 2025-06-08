@@ -65,8 +65,8 @@ CREATE TABLE IF NOT EXISTS cart (
 );
 
 -- Insert Sample Admin User (password: admin123)
-INSERT INTO users (username, email, password, first_name, last_name, role) 
-VALUES ('admin', 'admin@example.com', '$2y$10$8WjA7zOt9IIsLZySAoYBKexVtbHZLjwMqRVhEV1QWSCJzhxzF2C4y', 'Admin', 'User', 'admin');
+INSERT IGNORE INTO users (username, email, password, first_name, last_name, role) 
+VALUES ('admin', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'User', 'admin');
 
 -- Insert Sample Products
 INSERT INTO products (name, description, price, sale_price, category, image, stock) VALUES

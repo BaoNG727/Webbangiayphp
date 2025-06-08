@@ -121,8 +121,7 @@ try {
             $controller = new CartController();
             $controller->clear();
             break;
-            
-        // Checkout routes
+              // Checkout routes
         case ($path === '/checkout'):
             $controller = new CheckoutController();
             $controller->index();
@@ -133,9 +132,23 @@ try {
             $controller->process();
             break;
             
+        case ($path === '/checkout/process' && $method === 'POST'):
+            $controller = new CheckoutController();
+            $controller->process();
+            break;
+              case ($path === '/checkout/process'):
+            // Redirect GET requests to checkout page
+            header('Location: /Webgiay/checkout');
+            exit;
+            
         case ($path === '/checkout/success'):
             $controller = new CheckoutController();
             $controller->success();
+            break;
+              // Profile route
+        case ($path === '/profile'):
+            $controller = new AuthController();
+            $controller->profile();
             break;
             
         // Order routes

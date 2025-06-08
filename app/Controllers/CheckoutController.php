@@ -14,11 +14,9 @@ class CheckoutController extends Controller
         $userId = $this->session('user_id');
         
         $cartItems = $cartModel->getUserCart($userId);
-        $cartTotal = $cartModel->getCartTotal($userId);
-
-        // Redirect if cart is empty
+        $cartTotal = $cartModel->getCartTotal($userId);        // Redirect if cart is empty
         if (empty($cartItems)) {
-            $this->redirect('/cart');
+            $this->redirect('/Webgiay/cart');
             return;
         }
 
@@ -33,12 +31,10 @@ class CheckoutController extends Controller
         $this->view('layouts/header', $data);
         $this->view('checkout/index', $data);
         $this->view('layouts/footer');
-    }
-
-    public function process()
+    }    public function process()
     {
         if (!$this->isPost()) {
-            $this->redirect('/checkout');
+            $this->redirect('/Webgiay/checkout');
             return;
         }
 
@@ -49,11 +45,9 @@ class CheckoutController extends Controller
         $userId = $this->session('user_id');
 
         $cartItems = $cartModel->getUserCart($userId);
-        $cartTotal = $cartModel->getCartTotal($userId);
-
-        if (empty($cartItems)) {
+        $cartTotal = $cartModel->getCartTotal($userId);        if (empty($cartItems)) {
             $this->session('error', 'Your cart is empty');
-            $this->redirect('/cart');
+            $this->redirect('/Webgiay/cart');
             return;
         }
 
@@ -87,12 +81,10 @@ class CheckoutController extends Controller
 
         if (!filter_var($shipping['email'], FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'Valid email is required';
-        }
-
-        if (!empty($errors)) {
+        }        if (!empty($errors)) {
             $this->session('checkout_errors', $errors);
             $this->session('checkout_data', array_merge($shipping, ['payment_method' => $paymentMethod]));
-            $this->redirect('/checkout');
+            $this->redirect('/Webgiay/checkout');
             return;
         }
 
@@ -141,28 +133,22 @@ class CheckoutController extends Controller
                 } catch (Exception $emailError) {
                     // Log email error but don't fail the order
                     error_log("Failed to send order confirmation email: " . $emailError->getMessage());
-                }
-
-                // Set success message and redirect
+                }                // Set success message and redirect
                 $this->session('order_success', $orderId);
-                $this->redirect('/checkout/success');
+                $this->redirect('/Webgiay/checkout/success');
             } else {
                 throw new Exception('Failed to create order');
-            }
-
-        } catch (Exception $e) {
+            }        } catch (Exception $e) {
             $this->session('error', 'Order processing failed. Please try again.');
-            $this->redirect('/checkout');
+            $this->redirect('/Webgiay/checkout');
         }
     }
 
     public function success()
     {
-        $this->requireLogin();
-
-        $orderId = $this->session('order_success');
+        $this->requireLogin();        $orderId = $this->session('order_success');
         if (!$orderId) {
-            $this->redirect('/');
+            $this->redirect('/Webgiay/');
             return;
         }
 

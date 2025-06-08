@@ -6,8 +6,10 @@
                 <div class="card-header">
                     <h5 class="mb-0">Filters</h5>
                 </div>
-                <div class="card-body">
-                    <form id="filter-form" method="GET" action="/Webgiay/products">
+                <div class="card-body">                    <form id="filter-form" method="GET" action="/Webgiay/products">
+                        <!-- Hidden input for page reset -->
+                        <input type="hidden" name="page" value="1">
+                        
                         <!-- Search -->
                         <div class="mb-3">
                             <label class="form-label">Search</label>
@@ -58,16 +60,19 @@
                     </form>
                 </div>
             </div>
-        </div>
-
-        <!-- Products Grid -->
+        </div>        <!-- Products Grid -->
         <div class="col-lg-9">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1>Products</h1>
-                <span class="text-muted"><?php echo $product_count; ?> products found</span>
-            </div>
-
-            <?php if (!empty($products)): ?>
+                <div class="d-flex align-items-center">
+                    <span class="text-muted me-3"><?php echo $product_count; ?> products found</span>
+                    <?php if ($pagination['total_pages'] > 1): ?>
+                        <small class="text-muted">
+                            Page <?php echo $pagination['current_page']; ?> of <?php echo $pagination['total_pages']; ?>
+                        </small>
+                    <?php endif; ?>
+                </div>
+            </div><?php if (!empty($products)): ?>
                 <div class="row">
                     <?php foreach ($products as $product): ?>
                         <div class="col-lg-4 col-md-6 mb-4">
@@ -85,13 +90,6 @@
                                            class="btn btn-sm btn-light" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <?php if (isset($_SESSION['user_id'])): ?>
-                                            <button class="btn btn-sm btn-dark add-to-cart-btn" 
-                                                    data-product-id="<?php echo $product['id']; ?>" 
-                                                    title="Add to Cart">
-                                                <i class="fas fa-shopping-cart"></i>
-                                            </button>
-                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 
@@ -131,6 +129,88 @@
                         </div>
                     <?php endforeach; ?>
                 </div>
+
+                <!-- Pagination -->
+                <?php if ($pagination['total_pages'] > 1): ?>
+                    <nav aria-label="Product pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <!-- Previous Page -->
+                            <?php if ($pagination['has_prev']): ?>
+                                <li class="page-item">
+                                    <a class="page-link" href="/Webgiay/products?page=<?php echo $pagination['prev_page']; ?><?php echo $pagination['query_string'] ? '&' . $pagination['query_string'] : ''; ?>">
+                                        <i class="fas fa-chevron-left"></i> Previous
+                                    </a>
+                                </li>
+                            <?php else: ?>
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="fas fa-chevron-left"></i> Previous</span>
+                                </li>
+                            <?php endif; ?>
+
+                            <!-- Page Numbers -->
+                            <?php
+                            $start_page = max(1, $pagination['current_page'] - 2);
+                            $end_page = min($pagination['total_pages'], $pagination['current_page'] + 2);
+                            
+                            // Always show first page
+                            if ($start_page > 1): ?>
+                                <li class="page-item">
+                                    <a class="page-link" href="/Webgiay/products?page=1<?php echo $pagination['query_string'] ? '&' . $pagination['query_string'] : ''; ?>">1</a>
+                                </li>
+                                <?php if ($start_page > 2): ?>
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                <?php endif; ?>
+                            <?php endif; ?>
+
+                            <!-- Current page range -->
+                            <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+                                <li class="page-item <?php echo ($i == $pagination['current_page']) ? 'active' : ''; ?>">
+                                    <a class="page-link" href="/Webgiay/products?page=<?php echo $i; ?><?php echo $pagination['query_string'] ? '&' . $pagination['query_string'] : ''; ?>">
+                                        <?php echo $i; ?>
+                                    </a>
+                                </li>
+                            <?php endfor; ?>
+
+                            <!-- Always show last page -->
+                            <?php if ($end_page < $pagination['total_pages']): ?>
+                                <?php if ($end_page < $pagination['total_pages'] - 1): ?>
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                <?php endif; ?>
+                                <li class="page-item">
+                                    <a class="page-link" href="/Webgiay/products?page=<?php echo $pagination['total_pages']; ?><?php echo $pagination['query_string'] ? '&' . $pagination['query_string'] : ''; ?>">
+                                        <?php echo $pagination['total_pages']; ?>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+
+                            <!-- Next Page -->
+                            <?php if ($pagination['has_next']): ?>
+                                <li class="page-item">
+                                    <a class="page-link" href="/Webgiay/products?page=<?php echo $pagination['next_page']; ?><?php echo $pagination['query_string'] ? '&' . $pagination['query_string'] : ''; ?>">
+                                        Next <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            <?php else: ?>
+                                <li class="page-item disabled">
+                                    <span class="page-link">Next <i class="fas fa-chevron-right"></i></span>
+                                </li>
+                            <?php endif; ?>
+                        </ul>
+                    </nav>
+
+                    <!-- Pagination Info -->
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            Showing <?php echo (($pagination['current_page'] - 1) * $pagination['per_page']) + 1; ?> 
+                            to <?php echo min($pagination['current_page'] * $pagination['per_page'], $pagination['total_items']); ?> 
+                            of <?php echo $pagination['total_items']; ?> products
+                        </small>
+                    </div>
+                <?php endif; ?>
             <?php else: ?>
                 <div class="text-center py-5">
                     <i class="fas fa-search fa-3x text-muted mb-3"></i>

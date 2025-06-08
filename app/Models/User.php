@@ -4,9 +4,7 @@ require_once __DIR__ . '/../Core/Model.php';
 
 class User extends Model
 {
-    protected $table = 'users';
-
-    public function findByUsername($username)
+    protected $table = 'users';    public function findByUsername($username)
     {
         $sql = "SELECT * FROM {$this->table} WHERE username = ? OR email = ?";
         return $this->db->fetch($sql, [$username, $username]);

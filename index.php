@@ -7,4 +7,3 @@
 // Include the hybrid router
 require_once __DIR__ . '/router.php';
 ?>
-?>

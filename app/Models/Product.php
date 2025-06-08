@@ -24,9 +24,7 @@ class Product extends Model
     {
         $sql = "SELECT * FROM {$this->table} WHERE category = ? AND stock > 0";
         return $this->db->fetchAll($sql, [$category]);
-    }
-
-    public function search($filters = [])
+    }    public function search($filters = [], $page = 1, $perPage = 12)
     {
         $sql = "SELECT * FROM {$this->table} WHERE stock > 0";
         $params = [];
@@ -67,7 +65,39 @@ class Product extends Model
                 $sql .= " ORDER BY id DESC";
         }
 
+        // Add pagination
+        $offset = ($page - 1) * $perPage;
+        $sql .= " LIMIT ? OFFSET ?";
+        $params[] = $perPage;
+        $params[] = $offset;
+
         return $this->db->fetchAll($sql, $params);
+    }
+
+    public function searchCount($filters = [])
+    {
+        $sql = "SELECT COUNT(*) as total FROM {$this->table} WHERE stock > 0";
+        $params = [];
+
+        if (!empty($filters['category'])) {
+            $sql .= " AND category = ?";
+            $params[] = $filters['category'];
+        }
+
+        if (!empty($filters['sale'])) {
+            $sql .= " AND sale_price IS NOT NULL AND sale_price > 0";
+        }
+
+        if (!empty($filters['search'])) {
+            $sql .= " AND (name LIKE ? OR description LIKE ? OR category LIKE ?)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+
+        $result = $this->db->fetch($sql, $params);
+        return $result ? $result['total'] : 0;
     }
 
     public function getCategories()

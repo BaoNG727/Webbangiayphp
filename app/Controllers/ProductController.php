@@ -4,8 +4,7 @@ require_once __DIR__ . '/../Core/Controller.php';
 require_once __DIR__ . '/../Core/Database.php';
 
 class ProductController extends Controller
-{
-    public function index()
+{    public function index()
     {
         $productModel = $this->model('Product');
         
@@ -17,12 +16,38 @@ class ProductController extends Controller
             'search' => $this->input('search')
         ];
 
+        // Pagination
+        $page = max(1, (int)$this->input('page', 1));
+        $perPage = 12;
+        
+        // Get products and total count
+        $products = $productModel->search($filters, $page, $perPage);
+        $totalProducts = $productModel->searchCount($filters);
+        $totalPages = ceil($totalProducts / $perPage);
+
+        // Build query string for pagination links
+        $queryParams = array_filter($filters, function($value) {
+            return $value !== null && $value !== '';
+        });
+        $queryString = http_build_query($queryParams);
+
         $data = [
             'title' => 'Products - Nike Shoe Store',
-            'products' => $productModel->search($filters),
+            'products' => $products,
             'categories' => $productModel->getCategories(),
             'current_filters' => $filters,
-            'product_count' => count($productModel->search($filters))
+            'product_count' => $totalProducts,
+            'pagination' => [
+                'current_page' => $page,
+                'total_pages' => $totalPages,
+                'per_page' => $perPage,
+                'total_items' => $totalProducts,
+                'has_prev' => $page > 1,
+                'has_next' => $page < $totalPages,
+                'prev_page' => $page - 1,
+                'next_page' => $page + 1,
+                'query_string' => $queryString
+            ]
         ];
 
         $this->view('layouts/header', $data);

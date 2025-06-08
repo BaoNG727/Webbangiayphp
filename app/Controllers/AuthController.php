@@ -84,9 +84,9 @@ class AuthController extends Controller
                     $error = "Username already exists";
                 } elseif ($userModel->isEmailTaken($email)) {
                     $error = "Email already exists";
-                } else {
-                    // Create user
+                } else {                    // Create user
                     $userData = [
+                        'name' => $firstName . ' ' . $lastName,
                         'username' => $username,
                         'email' => $email,
                         'password' => $password,
@@ -132,5 +132,108 @@ class AuthController extends Controller
     {
         session_destroy();
         $this->redirect('/Webgiay/login');
+    }
+
+    public function profile()
+    {
+        $this->requireLogin();
+        
+        $userModel = $this->model('User');
+        $orderModel = $this->model('Order');
+        $userId = $this->session('user_id');
+        $user = $userModel->find($userId);
+        
+        if (!$user) {
+            $this->redirect('/Webgiay/login');
+            return;
+        }
+        
+        // Get user statistics
+        $orderCount = $orderModel->count(['user_id' => $userId]);
+        
+        $success = '';
+        $error = '';
+        
+        // Handle profile update
+        if ($this->isPost()) {
+            $firstName = trim($this->input('first_name'));
+            $lastName = trim($this->input('last_name'));
+            $email = trim($this->input('email'));
+            $currentPassword = $this->input('current_password');
+            $newPassword = $this->input('new_password');
+            $confirmPassword = $this->input('confirm_password');
+            
+            $errors = [];
+            
+            // Validate required fields
+            if (empty($firstName)) {
+                $errors[] = 'First name is required';
+            }
+            if (empty($lastName)) {
+                $errors[] = 'Last name is required';
+            }
+            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = 'Valid email is required';
+            }
+            
+            // Check if email is already taken by another user
+            if ($userModel->isEmailTaken($email, $userId)) {
+                $errors[] = 'Email is already taken';
+            }
+            
+            // Password update validation
+            if (!empty($newPassword)) {
+                if (empty($currentPassword)) {
+                    $errors[] = 'Current password is required to set new password';
+                } elseif (!$userModel->verifyPassword($currentPassword, $user['password'])) {
+                    $errors[] = 'Current password is incorrect';
+                } elseif (strlen($newPassword) < 6) {
+                    $errors[] = 'New password must be at least 6 characters long';
+                } elseif ($newPassword !== $confirmPassword) {
+                    $errors[] = 'New password confirmation does not match';
+                }
+            }
+            
+            if (empty($errors)) {
+                // Update user data
+                $updateData = [
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'email' => $email
+                ];
+                
+                // Update password if provided
+                if (!empty($newPassword)) {
+                    $updateData['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
+                }
+                
+                if ($userModel->update($userId, $updateData)) {
+                    // Update session email if changed
+                    if ($email !== $user['email']) {
+                        $this->session('email', $email);
+                    }
+                    
+                    $success = 'Profile updated successfully';
+                    // Refresh user data
+                    $user = $userModel->find($userId);
+                } else {
+                    $error = 'Failed to update profile';
+                }
+            } else {
+                $error = implode('<br>', $errors);
+            }
+        }
+        
+        $data = [
+            'title' => 'My Profile - Nike Shoe Store',
+            'user' => $user,
+            'order_count' => $orderCount,
+            'success' => $success,
+            'error' => $error
+        ];
+        
+        $this->view('layouts/header', $data);
+        $this->view('users/profile', $data);
+        $this->view('layouts/footer');
     }
 }

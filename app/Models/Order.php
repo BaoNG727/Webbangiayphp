@@ -9,11 +9,16 @@ class Order extends Model
     public function createOrder($data)
     {
         return $this->create($data);
-    }
-
-    public function getUserOrders($userId)
+    }    public function getUserOrders($userId)
     {
-        $sql = "SELECT * FROM {$this->table} WHERE user_id = ? ORDER BY created_at DESC";
+        $sql = "SELECT o.*, 
+                       o.total_amount as total,
+                       COUNT(oi.id) as item_count
+                FROM {$this->table} o 
+                LEFT JOIN order_items oi ON o.id = oi.order_id 
+                WHERE o.user_id = ? 
+                GROUP BY o.id 
+                ORDER BY o.created_at DESC";
         return $this->db->fetchAll($sql, [$userId]);
     }
 
@@ -40,9 +45,7 @@ class Order extends Model
         $sql = "INSERT INTO order_items (order_id, product_id, quantity, price) 
                 VALUES (:order_id, :product_id, :quantity, :price)";
         return $this->db->query($sql, $orderItemData);
-    }
-
-    public function getRecentOrders($limit = 5)
+    }    public function getRecentOrders($limit = 5)
     {
         $sql = "SELECT o.*, u.username, u.email 
                 FROM {$this->table} o 

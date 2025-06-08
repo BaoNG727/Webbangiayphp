@@ -13,7 +13,7 @@ class Database
         $this->host = "localhost";
         $this->username = "root";
         $this->password = "";
-        $this->database = "shoe_store";
+        $this->database = "nike_store";
         $this->connect();
     }
 
